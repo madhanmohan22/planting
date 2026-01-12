@@ -2,9 +2,11 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Use the provided CockroachDB URL
-# Note: asyncpg requires 'postgresql+asyncpg://' or 'cockroachdb+asyncpg://'
-DATABASE_URL = "cockroachdb+asyncpg://noobu:yDhiczH4-4EZAsydz_Wbxg@fake-ayeaye-20209.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb"
+# DATABASE_URL should be set as an environment variable in production (Render)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "cockroachdb+asyncpg://noobu:yDhiczH4-4EZAsydz_Wbxg@fake-ayeaye-20209.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb"
+)
 
 engine = create_async_engine(
     DATABASE_URL,
