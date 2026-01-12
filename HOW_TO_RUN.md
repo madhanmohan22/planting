@@ -108,7 +108,42 @@ uvicorn app.main:app --reload --port 8001
 
 ---
 
+---
+
+## 🚀 Deploying to Render (Free Tier)
+
+Since you are using the **Free Tier**, follow these specific steps to get your app live:
+
+### Step 1: Create the Web Service
+1. Go to [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Web Service**.
+2. Connect your GitHub repository: `https://github.com/madhanmohan22/planting.git`
+3. **Settings:**
+   - **Name:** `planting-app`
+   - **Runtime:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `python init_db.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type:** `Free`
+
+### Step 2: Add Environment Variables
+Click the **Advanced** button or go to the **Environment** tab and add these:
+
+| Key | Value |
+|--|--|
+| `DATABASE_URL` | *Your CockroachDB Connection String* |
+| `PYTHON_VERSION` | `3.10.0` (or leave blank) |
+
+### Step 3: Deployment & Usage
+1. Click **Create Web Service**.
+2. **First Load:** The first time you open the URL, it might take 1-2 minutes to "wake up" the server. This is normal for Render's free tier.
+3. **URL:** Your app will be at `https://your-app-name.onrender.com/static/index.html`.
+
+### ⚠️ Free Tier Limitations:
+- **Spin Down:** If no one uses the site for 15 minutes, Render puts it to "sleep". The next person to visit will wait about 30 seconds for it to start.
+- **Database:** Since we use CockroachDB, your data will NOT be deleted even if Render sleeps!
+
+---
+
 ## Data Persistence
 
 ✅ **Users persist across server restarts** - You only need to create them once!
-⚠️ **Never run `init_db.py` unless you want to reset everything**
+⚠️ **Never run `init_db.py` locally unless you want to reset everything.** (On Render, it runs once per deployment to ensure tables exist).
