@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - LPG Connect</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .role-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .role-admin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .role-plant {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .role-super {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .role-dist {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <div class="sidebar glass-panel">
+            <h2 class="section-title" style="font-size: 1.2rem; padding-left: 1rem;">Admin Portal</h2>
+            <nav>
+                <a href="#" class="nav-item active" onclick="showSection('users')">User Management</a>
+                <a href="#" class="nav-item" onclick="showSection('create')">Create Users</a>
+                <a href="#" class="nav-item" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+
+            <!-- User Management Section -->
+            <div id="users-section">
+                <h1 class="section-title">User Management</h1>
+
+                <div class="search-bar">
+                    <input type="text" id="search-input" class="form-input"
+                        placeholder="Search by name, username or company..." style="margin-bottom: 0;">
+                    <select id="role-filter" class="form-input" style="width: 200px; margin-bottom: 0;">
+                        <option value="ALL">All Roles</option>
+                        <option value="SUPER_MASTER">Super Masters</option>
+                        <option value="PLANT">Plant Managers</option>
+                        <option value="DISTRIBUTOR">Distributors</option>
+                    </select>
+                    <select id="status-filter" class="form-input" style="width: 150px; margin-bottom: 0;">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="glass-panel" style="padding: 1rem;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User Detail Modal -->
+            <div id="user-modal" class="modal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div class="glass-panel"
+                    style="background: white; width: 90%; max-width: 500px; padding: 2rem; position: relative;">
+                    <button onclick="closeModal()"
+                        style="position: absolute; top: 1rem; right: 1rem; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    <h2 style="margin-bottom: 1.5rem; color: #111827;">User Details</h2>
+                    <div id="modal-content" style="display: grid; gap: 1rem;">
+                        <!-- Content populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Users Section -->
+            <div id="create-section" style="display: none;">
+                <h1 class="section-title">Create New Users</h1>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Create Super Master -->
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3>Create Super Master</h3>
+                        <div id="msg-sm" class="alert"></div>
+                        <form id="create-sm-form">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="sm_username" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="sm_email" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" id="sm_password" class="form-input" required value="super123">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="sm_name" class="form-input" required>
+                            </div>
+                            <button type="submit" class="btn-primary">Create Super Master</button>
+                        </form>
+                    </div>
+
+                    <!-- Create Plant Manager -->
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3>Create Plant Manager</h3>
+                        <div id="msg-pm" class="alert"></div>
+                        <form id="create-pm-form">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="pm_username" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="pm_email" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" id="pm_password" class="form-input" required value="plant123">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name (Plant Coordinator)</label>
+                                <input type="text" id="pm_name" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Plant Name</label>
+                                <input type="text" id="plant_name" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" id="plant_location" class="form-input" required>
+                            </div>
+                            <button type="submit" class="btn-primary">Create Plant & Manager</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/static/js/common.js"></script>
+    <script>
+        function showSection(sectionId) {
+            document.getElementById('users-section').style.display = 'none';
+            document.getElementById('create-section').style.display = 'none';
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            if (sectionId === 'users') {
+                document.getElementById('users-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                loadUsers();
+            } else if (sectionId === 'create') {
+                document.getElementById('create-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+            }
+        }
+
+        async function loadUsers() {
+            const role = document.getElementById('role-filter').value;
+            const status = document.getElementById('status-filter').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+
+            try {
+                const resp = await apiCall(`/admin/users?role_filter=${role}&status_filter=${status}`);
+                if (resp && resp.ok) {
+                    let data = await resp.json();
+
+                    if (search) {
+                        data = data.filter(u =>
+                            u.username.toLowerCase().includes(search) ||
+                            (u.full_name && u.full_name.toLowerCase().includes(search)) ||
+                            (u.company_name && u.company_name.toLowerCase().includes(search))
+                        );
+                    }
+
+                    const tbody = document.getElementById('users-body');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No users found</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(u => {
+                        let roleClass = 'role-dist';
+                        if (u.role === 'ADMIN') roleClass = 'role-admin';
+                        if (u.role === 'SUPER_MASTER') roleClass = 'role-super';
+                        if (u.role === 'PLANT') roleClass = 'role-plant';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${u.id}</td>
+                            <td>
+                                <div style="font-weight:600;">${u.full_name || u.username}</div>
+                                <div style="font-size:0.8rem; color:#6b7280;">${u.email}</div>
+                            </td>
+                            <td><span class="role-badge ${roleClass}">${u.role}</span></td>
+                            <td>${u.company_name || '-'}</td>
+                            <td>
+                                ${u.is_active
+                                ? '<span style="color:green; font-weight:500;">Active</span>'
+                                : '<span style="color:red; font-weight:500;">Inactive</span>'}
+                            </td>
+                            <td>
+                                <button onclick="viewUserDetail('${u.id}')" class="btn-primary" style="background: #4f46e5; padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.5rem;">View</button>
+                                ${u.role !== 'ADMIN' ? `
+                                    <button onclick="toggleUserStatus('${u.id}', ${u.is_active})" 
+                                        class="btn-primary" 
+                                        style="background: ${u.is_active ? '#EF4444' : '#10B981'}; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                        ${u.is_active ? 'Deactivate' : 'Reactivate'}
+                                    </button>
+                                ` : ''}
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function viewUserDetail(id) {
+            try {
+                console.log(`Fetching user details for ID: ${id}`);
+                const resp = await apiCall(`/admin/users/${id}`);
+
+                if (!resp) {
+                    console.error('No response received from API');
+                    alert('Session expired. Please login again.');
+                    return;
+                }
+
+                if (!resp.ok) {
+                    console.error(`API returned error: ${resp.status} ${resp.statusText}`);
+                    const errorText = await resp.text();
+                    console.error('Error details:', errorText);
+                    alert(`Failed to load user details: ${resp.status} ${resp.statusText}`);
+                    return;
+                }
+
+                const u = await resp.json();
+                console.log('User details loaded successfully:', u);
+
+                const content = document.getElementById('modal-content');
+                content.innerHTML = `
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div><strong>ID:</strong> #${u.id}</div>
+                        <div><strong>Role:</strong> <span class="role-badge" style="background:#f3f4f6">${u.role}</span></div>
+                        <div style="grid-column: 1/-1"><hr style="border:0; border-top:1px solid #eee; margin:0.5rem 0;"></div>
+                        <div><strong>Full Name:</strong> ${u.full_name || '-'}</div>
+                        <div><strong>Username:</strong> ${u.username}</div>
+                        <div><strong>Email:</strong> ${u.email}</div>
+                        <div><strong>Contact:</strong> ${u.contact_number || '-'}</div>
+                        <div><strong>Company:</strong> ${u.company_name || '-'}</div>
+                        <div><strong>GST Number:</strong> ${u.gst_number || '-'}</div>
+                        <div style="grid-column: 1/-1"><strong>Address:</strong><br>${u.address || '-'}</div>
+                        <div style="grid-column: 1/-1"><hr style="border:0; border-top:1px solid #eee; margin:0.5rem 0;"></div>
+                         <div><strong>Status:</strong> ${u.is_active ? '<span style="color:green">Active</span>' : '<span style="color:red">Inactive</span>'}</div>
+                         <div><strong>Created By (ID):</strong> ${u.created_by_id || '-'}</div>
+                    </div>
+                `;
+                document.getElementById('user-modal').style.display = 'flex';
+            } catch (e) {
+                console.error('Exception in viewUserDetail:', e);
+                alert('An unexpected error occurred. Check console for details.');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('user-modal').style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+            if (event.target == document.getElementById('user-modal')) closeModal();
+        }
+
+        async function toggleUserStatus(userId, isActive) {
+            const url = isActive
+                ? `/admin/users/${userId}`
+                : `/admin/users/${userId}/reactivate`;
+            const method = isActive ? 'DELETE' : 'POST';
+            const action = isActive ? 'deactivate' : 'reactivate';
+
+            if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+
+            try {
+                console.log(`${action} user ${userId}: ${method} ${url}`);
+                const resp = await apiCall(url, method);
+
+                if (!resp) {
+                    console.error('No response received from API');
+                    alert('Session expired. Please login again.');
+                    return;
+                }
+
+                if (!resp.ok) {
+                    console.error(`API returned error: ${resp.status} ${resp.statusText}`);
+                    const errorText = await resp.text();
+                    console.error('Error details:', errorText);
+                    alert(`Failed to ${action} user: ${resp.status} ${resp.statusText}`);
+                    return;
+                }
+
+                const result = await resp.json();
+                console.log(`User ${action}d successfully:`, result);
+
+                // Reload the user list to show updated status
+                await loadUsers();
+
+            } catch (e) {
+                console.error(`Exception in toggleUserStatus:`, e);
+                alert('An unexpected error occurred. Check console for details.');
+            }
+        }
+
+        document.getElementById('role-filter').addEventListener('change', loadUsers);
+        document.getElementById('status-filter').addEventListener('change', loadUsers);
+        document.getElementById('search-input').addEventListener('input', loadUsers);
+
+        document.getElementById('create-sm-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg-sm');
+            const payload = {
+                username: document.getElementById('sm_username').value,
+                email: document.getElementById('sm_email').value,
+                password: document.getElementById('sm_password').value,
+                full_name: document.getElementById('sm_name').value,
+                role: 'SUPER_MASTER'
+            };
+
+            try {
+                const resp = await apiCall('/admin/super-masters', 'POST', payload);
+                if (resp && resp.ok) {
+                    msg.className = 'alert alert-success';
+                    msg.textContent = "Super Master Created!";
+                    msg.style.display = 'block';
+                    e.target.reset();
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else if (resp) {
+                    let errorMsg = `Error ${resp.status}: ${resp.statusText}`;
+                    try {
+                        const err = await resp.json();
+                        if (err.detail) errorMsg = err.detail;
+                    } catch (jsonErr) {
+                        console.warn("Response was not JSON", jsonErr);
+                    }
+                    msg.className = 'alert alert-error';
+                    msg.textContent = errorMsg;
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                msg.className = 'alert alert-error';
+                msg.textContent = "Network or unexpected error occurred.";
+                msg.style.display = 'block';
+            }
+        });
+
+        document.getElementById('create-pm-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg-pm');
+            const userPayload = {
+                username: document.getElementById('pm_username').value,
+                email: document.getElementById('pm_email').value,
+                password: document.getElementById('pm_password').value,
+                full_name: document.getElementById('pm_name').value,
+                role: 'PLANT'
+            };
+
+            try {
+                const userResp = await apiCall('/admin/plant-managers', 'POST', userPayload);
+                if (userResp && userResp.ok) {
+                    const user = await userResp.json();
+                    const plantPayload = {
+                        name: document.getElementById('plant_name').value,
+                        location: document.getElementById('plant_location').value,
+                        manager_id: user.id
+                    };
+                    const plantResp = await apiCall('/admin/plants', 'POST', plantPayload);
+                    if (plantResp && plantResp.ok) {
+                        msg.className = 'alert alert-success';
+                        msg.textContent = "Plant & Manager Created Successfully!";
+                        msg.style.display = 'block';
+                        e.target.reset();
+                        setTimeout(() => msg.style.display = 'none', 3000);
+                    } else {
+                        msg.className = 'alert alert-error';
+                        msg.textContent = "Manager created, but Plant creation failed.";
+                        msg.style.display = 'block';
+                    }
+                } else if (userResp) {
+                    let errorMsg = `Error ${userResp.status}: ${userResp.statusText}`;
+                    try {
+                        const err = await userResp.json();
+                        if (err.detail) errorMsg = err.detail;
+                    } catch (jsonErr) {
+                        console.warn("Response was not JSON", jsonErr);
+                    }
+                    msg.className = 'alert alert-error';
+                    msg.textContent = errorMsg;
+                    msg.style.display = 'block';
+                }
+            } catch (e) { console.error(e); }
+        });
+
+        loadUsers();
+    </script>
+</body>
+
+</html>

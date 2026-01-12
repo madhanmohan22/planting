@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Super Master Dashboard - LPG Connect</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .profile-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .profile-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .profile-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-approved {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-rejected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-aggregated {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-completed {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .sub-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        .sub-nav-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .sub-nav-item.active {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .sub-nav-item:hover {
+            color: #4f46e5;
+        }
+
+        .action-btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            margin-left: 0.25rem;
+        }
+
+        .btn-approve {
+            background: #10B981;
+            color: white;
+        }
+
+        .btn-reject {
+            background: #EF4444;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <div class="sidebar glass-panel">
+            <h2 class="section-title" style="font-size: 1.2rem; padding-left: 1rem;">Super Master</h2>
+            <nav>
+                <a href="#" class="nav-item active" onclick="showSection('requests')">Order Requests</a>
+                <a href="#" class="nav-item" onclick="showSection('distributors')">Manage Distributors</a>
+                <a href="#" class="nav-item" onclick="showSection('profile')">My Profile</a>
+                <a href="#" class="nav-item" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <!-- Order Requests Section -->
+            <div id="requests-section">
+                <h1 class="section-title">Order Management</h1>
+
+                <div class="sub-nav">
+                    <div class="sub-nav-item active" onclick="showRequestTab('pending')">Pending Approval</div>
+                    <div class="sub-nav-item" onclick="showRequestTab('approved')">Ready for Plant</div>
+                    <div class="sub-nav-item" onclick="showRequestTab('history')">Aggregation History</div>
+                </div>
+
+                <div class="glass-panel" style="padding: 1.5rem;">
+
+                    <!-- Pending Tab -->
+                    <div id="tab-pending">
+                        <h3 style="margin-bottom: 1rem;">Distributor Requests Needing Approval</h3>
+                        <div id="msg-pending" class="alert"></div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Req ID</th>
+                                    <th>Distributor</th>
+                                    <th>Date</th>
+                                    <th>Filled</th>
+                                    <th>Empty</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pending-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Approved Tab -->
+                    <div id="tab-approved" style="display: none;">
+                        <h3 style="margin-bottom: 1rem;">Consolidate Orders for Plant</h3>
+                        <div id="msg-aggregate" class="alert"></div>
+
+                        <div
+                            style="background: #F3F4F6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #E5E7EB;">
+                            <h4 style="margin-bottom: 0.5rem; color: #374151;">Step 1: Select Plant</h4>
+                            <div class="form-group" style="max-width: 400px;">
+                                <select id="plant-select" class="form-input">
+                                    <option value="">Select Plant Location...</option>
+                                </select>
+                            </div>
+
+                            <h4 style="margin-bottom: 0.5rem; margin-top: 1rem; color: #374151;">Step 2: Select Orders
+                                to Include</h4>
+                            <button onclick="aggregateRequests()" class="btn-primary" style="margin-top: 0.5rem;">
+                                Create Consolidated Order
+                            </button>
+                        </div>
+
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Req ID</th>
+                                    <th>Distributor</th>
+                                    <th>Filled</th>
+                                    <th>Empty</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approved-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div id="tab-history" style="display: none;">
+                        <h3 style="margin-bottom: 1rem;">Consolidated Order History</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Agg ID</th>
+                                    <th>Plant</th>
+                                    <th>Date</th>
+                                    <th>Filled (14/17/19/21)</th>
+                                    <th>Empty (14/17/19/21)</th>
+                                    <th>Total Cylinders</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Manage Distributors Section -->
+            <div id="distributors-section" style="display: none;">
+                <h1 class="section-title">Manage Distributors</h1>
+                <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+                    <h3>Create New Distributor</h3>
+                    <div id="msg-dist" class="alert"></div>
+                    <form id="create-dist-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <p class="text-sm text-gray-500">Create login credentials for a new distributor in your
+                                network.</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="d_full_name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="d_username" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="d_company_name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="d_email" class="form-input" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Initial Password</label>
+                            <input type="password" id="d_password" class="form-input" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn-primary">Create Distributor Account</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="glass-panel" style="padding: 1rem;">
+                    <h3>Your Distributors</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Distributor</th>
+                                <th>Company</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dist-list-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Distributor Modal -->
+            <div id="dist-modal" class="modal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div class="glass-panel"
+                    style="background: white; width: 90%; max-width: 500px; padding: 2rem; position: relative;">
+                    <button onclick="closeDistModal()"
+                        style="position: absolute; top: 1rem; right: 1rem; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    <h2 style="margin-bottom: 1.5rem; color: #111827;">Distributor Details</h2>
+                    <div id="dist-modal-content" style="display: grid; gap: 1rem;">
+                        <!-- Content populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profile-section" style="display: none;">
+                <h1 class="section-title">My Profile</h1>
+
+                <div class="glass-panel" style="padding: 2rem; max-width: 800px; margin-bottom: 2rem;">
+                    <h3>Update Profile Information</h3>
+                    <div id="msg-profile" class="alert"></div>
+                    <form id="profile-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="p_full_name" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Company Name</label>
+                                <input type="text" id="p_company_name" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number</label>
+                                <input type="text" id="p_contact_number" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="p_email" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>GST Number</label>
+                                <input type="text" id="p_gst_number" class="form-input">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Address</label>
+                                <textarea id="p_address" class="form-input" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top: 1rem;">Update Profile</button>
+                    </form>
+                </div>
+
+                <!-- Password Change Section -->
+                <div class="glass-panel" style="padding: 2rem; max-width: 800px; margin-bottom: 2rem;">
+                    <h3>Change Password</h3>
+                    <div id="msg-password" class="alert"></div>
+                    <form id="password-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="old_password" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="new_password" class="form-input" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary"
+                            style="margin-top: 1rem; background-color: #F59E0B;">Update Password</button>
+                    </form>
+                </div>
+
+                <!-- Profile Display -->
+                <div class="profile-display" id="profile-display" style="display: none; max-width: 840px;">
+                    <h3 style="margin-bottom: 1rem;">📋 Current Profile Details</h3>
+                    <div class="profile-grid">
+                        <div class="profile-item">
+                            <div class="profile-label">Full Name</div>
+                            <div class="profile-value" id="disp_full_name">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Company Name</div>
+                            <div class="profile-value" id="disp_company_name">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Contact Number</div>
+                            <div class="profile-value" id="disp_contact_number">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Email</div>
+                            <div class="profile-value" id="disp_email">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">GST Number</div>
+                            <div class="profile-value" id="disp_gst_number">-</div>
+                        </div>
+                        <div class="profile-item" style="grid-column: 1 / -1;">
+                            <div class="profile-label">Address</div>
+                            <div class="profile-value" id="disp_address">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/common.js"></script>
+    <script>
+        // Navigation
+        function showSection(sectionId) {
+            document.getElementById('requests-section').style.display = 'none';
+            document.getElementById('distributors-section').style.display = 'none';
+            document.getElementById('profile-section').style.display = 'none';
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            if (sectionId === 'requests') {
+                document.getElementById('requests-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                loadPendingRequests();
+                loadApprovedRequests(); // Pre-load
+            } else if (sectionId === 'distributors') {
+                document.getElementById('distributors-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                loadDistributors();
+            } else if (sectionId === 'profile') {
+                document.getElementById('profile-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
+                loadProfile();
+            }
+        }
+
+        function showRequestTab(tabName) {
+            document.getElementById('tab-pending').style.display = 'none';
+            document.getElementById('tab-approved').style.display = 'none';
+            document.getElementById('tab-history').style.display = 'none';
+
+            document.querySelectorAll('.sub-nav-item').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'pending') {
+                document.getElementById('tab-pending').style.display = 'block';
+                document.querySelectorAll('.sub-nav-item')[0].classList.add('active');
+                loadPendingRequests();
+            } else if (tabName === 'approved') {
+                document.getElementById('tab-approved').style.display = 'block';
+                document.querySelectorAll('.sub-nav-item')[1].classList.add('active');
+                loadApprovedRequests();
+                loadPlants();
+            } else if (tabName === 'history') {
+                document.getElementById('tab-history').style.display = 'block';
+                document.querySelectorAll('.sub-nav-item')[2].classList.add('active');
+                loadAggregationHistory();
+            }
+        }
+
+        // Data Loading
+        async function loadProfile() {
+            try {
+                const resp = await apiCall('/super-master/profile');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+
+                    // Form
+                    document.getElementById('p_full_name').value = data.full_name || '';
+                    document.getElementById('p_company_name').value = data.company_name || '';
+                    document.getElementById('p_contact_number').value = data.contact_number || '';
+                    document.getElementById('p_email').value = data.email || '';
+                    document.getElementById('p_gst_number').value = data.gst_number || '';
+                    document.getElementById('p_address').value = data.address || '';
+
+                    // Display
+                    document.getElementById('disp_full_name').textContent = data.full_name || '-';
+                    document.getElementById('disp_company_name').textContent = data.company_name || '-';
+                    document.getElementById('disp_contact_number').textContent = data.contact_number || '-';
+                    document.getElementById('disp_email').textContent = data.email || '-';
+                    document.getElementById('disp_gst_number').textContent = data.gst_number || '-';
+                    document.getElementById('disp_address').textContent = data.address || '-';
+
+                    document.getElementById('profile-display').style.display = 'block';
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadPendingRequests() {
+            const resp = await apiCall('/super-master/requests/all?status_filter=PENDING');
+            if (resp && resp.ok) {
+                const data = await resp.json();
+                const tbody = document.getElementById('pending-body');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No pending requests</td></tr>';
+                    return;
+                }
+
+                for (const req of data) {
+                    // Fetch distributor details for name (could optimize by including in backend response)
+                    let distName = `Distributor #${req.distributor_id}`;
+                    // We can also fetch the user details if needed, but for now ID is okay
+
+                    const totalFilled = (req.filled_14kg || 0) + (req.filled_17kg || 0) + (req.filled_19kg || 0) + (req.filled_21kg || 0);
+                    const totalEmpty = (req.empty_14kg || 0) + (req.empty_17kg || 0) + (req.empty_19kg || 0) + (req.empty_21kg || 0);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>#${req.id}</td>
+                        <td>${distName}</td>
+                        <td>${req.booking_date}</td>
+                        <td>${totalFilled}</td>
+                        <td>${totalEmpty}</td>
+                        <td>
+                            <button onclick="updateRequestStatus('${req.id}', true)" class="action-btn-sm btn-approve">Approve</button>
+                            <button onclick="updateRequestStatus('${req.id}', false)" class="action-btn-sm btn-reject">Reject</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+        }
+
+        async function updateRequestStatus(reqId, isApproved) {
+            try {
+                if (!confirm(`Are you sure you want to ${isApproved ? 'APPROVE' : 'REJECT'} this request?`)) return;
+
+                const url = isApproved
+                    ? `/super-master/requests/${reqId}/approve`
+                    : `/super-master/requests/${reqId}/reject`;
+
+                console.log(`${isApproved ? 'Approving' : 'Rejecting'} request #${reqId}...`);
+
+                let resp;
+                if (isApproved) {
+                    // Approve endpoint does NOT accept a body in the backend
+                    resp = await apiCall(url, 'PUT');
+                } else {
+                    // Reject endpoint requires a body for the RequestApproval schema
+                    const reason = prompt("Please enter a reason for rejection:", "Rejected by Super Master");
+                    if (reason === null) return; // Cancelled prompt
+                    resp = await apiCall(url, 'PUT', { approved: false, rejection_reason: reason });
+                }
+
+                if (resp && resp.ok) {
+                    console.log("Status updated successfully");
+                    loadPendingRequests();
+
+                    const msg = document.getElementById('msg-pending');
+                    msg.className = 'alert alert-success';
+                    msg.style.display = 'block';
+                    msg.textContent = isApproved ? 'Request Approved! Moved to "Ready for Plant" tab.' : 'Request Rejected.';
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    const status = resp ? resp.status : 'Network Error';
+                    let errorDetail = '';
+                    try {
+                        const errData = await resp.json();
+                        errorDetail = errData.detail || '';
+                    } catch (e) { }
+
+                    const errorMsg = `Failed to update status: ${status} ${errorDetail}`;
+                    console.error(errorMsg);
+                    alert(errorMsg);
+                }
+            } catch (err) {
+                console.error("Critical error in updateRequestStatus:", err);
+                alert("An unexpected error occurred. Please check the console.");
+            }
+        }
+
+        async function loadApprovedRequests() {
+            const resp = await apiCall('/super-master/requests/all?status_filter=APPROVED');
+            if (resp && resp.ok) {
+                const data = await resp.json();
+                const tbody = document.getElementById('approved-body');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No approved requests ready for consolidation</td></tr>';
+                    return;
+                }
+
+                data.forEach(req => {
+                    const totalFilled = (req.filled_14kg || 0) + (req.filled_17kg || 0) + (req.filled_19kg || 0) + (req.filled_21kg || 0);
+                    const totalEmpty = (req.empty_14kg || 0) + (req.empty_17kg || 0) + (req.empty_19kg || 0) + (req.empty_21kg || 0);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="checkbox" class="agg-checkbox" value="${req.id}"></td>
+                        <td>#${req.id}</td>
+                        <td>Distributor #${req.distributor_id}</td>
+                        <td>${totalFilled}</td>
+                        <td>${totalEmpty}</td>
+                        <td><span class="status-badge status-approved">Approved</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        async function loadPlants() {
+            const resp = await apiCall('/super-master/plants');
+            if (resp && resp.ok) {
+                const data = await resp.json();
+                const sel = document.getElementById('plant-select');
+                sel.innerHTML = '<option value="">Select Plant Location...</option>';
+                data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = String(p.id);
+                    opt.textContent = `${p.name} - ${p.location}`;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+
+        async function aggregateRequests() {
+            try {
+                const checked = document.querySelectorAll('.agg-checkbox:checked');
+                if (checked.length === 0) {
+                    alert("Please select at least one approved request to consolidate.");
+                    return;
+                }
+
+                const plantId = document.getElementById('plant-select').value;
+                if (!plantId) {
+                    alert("Please select a target Plant.");
+                    return;
+                }
+
+                if (!confirm(`Consolidate ${checked.length} orders for the selected plant?`)) return;
+
+                const reqIds = Array.from(checked).map(c => c.value);
+                const payload = {
+                    distributor_request_ids: reqIds,
+                    plant_id: plantId
+                };
+
+                console.log("Aggregating requests...", payload);
+                const resp = await apiCall('/super-master/aggregate', 'POST', payload);
+
+                if (resp && resp.ok) {
+                    console.log("Aggregation successful");
+                    const msg = document.getElementById('msg-aggregate');
+                    msg.className = 'alert alert-success';
+                    msg.style.display = 'block';
+                    msg.textContent = '✅ Success! Orders consolidated and sent to Plant.';
+                    loadApprovedRequests();
+                    setTimeout(() => msg.style.display = 'none', 4000);
+                } else {
+                    const status = resp ? resp.status : 'Network Error';
+                    let detail = '';
+                    try {
+                        const data = await resp.json();
+                        detail = data.detail || '';
+                    } catch (e) { }
+                    alert(`Failed to aggregate requests: ${status} ${detail}`);
+                }
+            } catch (err) {
+                console.error("Critical error in aggregateRequests:", err);
+                alert("An unexpected error occurred during aggregation.");
+            }
+        }
+
+        async function loadAggregationHistory() {
+            const resp = await apiCall('/super-master/history');
+            if (resp && resp.ok) {
+                const data = await resp.json();
+                const tbody = document.getElementById('history-body');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No history found</td></tr>';
+                    return;
+                }
+
+                data.forEach(agg => {
+                    const tr = document.createElement('tr');
+                    const filledBreakdown = `${agg.sum_filled_14kg}/${agg.sum_filled_17kg}/${agg.sum_filled_19kg}/${agg.sum_filled_21kg}`;
+                    const emptyBreakdown = `${agg.sum_empty_14kg}/${agg.sum_empty_17kg}/${agg.sum_empty_19kg}/${agg.sum_empty_21kg}`;
+                    const totalCyl = (agg.total_filled_cylinders || 0) + (agg.total_empty_cylinders || 0);
+
+                    tr.innerHTML = `
+                        <td>#${agg.id}</td>
+                        <td>Plant #${agg.plant_id}</td>
+                        <td>${new Date(agg.created_at).toLocaleDateString()}</td>
+                        <td>${filledBreakdown}</td>
+                        <td>${emptyBreakdown}</td>
+                        <td><strong>${totalCyl}</strong></td>
+                        <td><span class="status-badge status-aggregated">${agg.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        async function loadDistributors() {
+            const resp = await apiCall('/super-master/distributors');
+            if (resp && resp.ok) {
+                const data = await resp.json();
+                const tbody = document.getElementById('dist-list-body');
+                tbody.innerHTML = '';
+
+                data.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${u.full_name} (${u.username})</td>
+                        <td>${u.company_name || '-'}</td>
+                        <td>${u.contact_number || '-'}</td>
+                        <td>${u.is_active ? '<span style="color:green">Active</span>' : '<span style="color:red">Inactive</span>'}</td>
+                        <td style="display:flex; gap:0.5rem; align-items:center;">
+                            <button onclick="viewDistributorDetail('${u.id}')" class="action-btn-sm" style="background:#4f46e5; color:white;">View</button>
+                            <button onclick="deleteDistributor('${u.id}')" class="action-btn-sm btn-reject">Deactivate</button>
+                        </td>
+                     `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        async function viewDistributorDetail(id) {
+            try {
+                console.log(`Fetching distributor details for ID: ${id}`);
+                const resp = await apiCall(`/super-master/distributors/${id}`);
+                if (resp && resp.ok) {
+                    const u = await resp.json();
+                    const content = document.getElementById('dist-modal-content');
+                    content.innerHTML = `
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div><strong>Distributor ID:</strong> #${u.id}</div>
+                            <div><strong>Status:</strong> ${u.is_active ? '<span style="color:green">Active</span>' : '<span style="color:red">Inactive</span>'}</div>
+                            <div style="grid-column: 1/-1"><hr style="border:0; border-top:1px solid #eee; margin:0.5rem 0;"></div>
+                            <div><strong>Full Name:</strong> ${u.full_name || '-'}</div>
+                            <div><strong>Username:</strong> ${u.username}</div>
+                            <div><strong>Email:</strong> ${u.email}</div>
+                            <div><strong>Contact:</strong> ${u.contact_number || '-'}</div>
+                            <div><strong>Company:</strong> ${u.company_name || '-'}</div>
+                            <div><strong>GST Number:</strong> ${u.gst_number || '-'}</div>
+                            <div style="grid-column: 1/-1"><strong>Address:</strong><br>${u.address || '-'}</div>
+                        </div>
+                    `;
+                    document.getElementById('dist-modal').style.display = 'flex';
+                } else {
+                    const status = resp ? resp.status : 'Network Error';
+                    alert(`Failed to load distributor details: ${status}`);
+                }
+            } catch (e) {
+                console.error("Error viewing distributor detail:", e);
+                alert("An error occurred while loading distributor details.");
+            }
+        }
+
+        function closeDistModal() {
+            document.getElementById('dist-modal').style.display = 'none';
+        }
+        window.onclick = function (event) {
+            if (event.target == document.getElementById('dist-modal')) closeDistModal();
+        }
+
+        async function deleteDistributor(id) {
+            if (!confirm("Are you sure you want to deactivate this distributor?")) return;
+            const resp = await apiCall(`/super-master/distributors/${id}`, 'DELETE');
+            if (resp && resp.ok) loadDistributors();
+        }
+
+        // Profile Update Handler
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                full_name: document.getElementById('p_full_name').value,
+                company_name: document.getElementById('p_company_name').value,
+                contact_number: document.getElementById('p_contact_number').value,
+                email: document.getElementById('p_email').value,
+                gst_number: document.getElementById('p_gst_number').value,
+                address: document.getElementById('p_address').value
+            };
+
+            const resp = await apiCall('/super-master/profile', 'PUT', payload);
+            if (resp && resp.ok) {
+                loadProfile(); // Refresh display
+                const msg = document.getElementById('msg-profile');
+                msg.className = 'alert alert-success';
+                msg.textContent = "Profile Updated Successfully!";
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3000);
+            }
+        });
+
+        // Password Change Handler
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPassword = document.getElementById('old_password').value;
+            const newPassword = document.getElementById('new_password').value;
+
+            const payload = {
+                old_password: oldPassword,
+                new_password: newPassword
+            };
+
+            try {
+                const resp = await apiCall('/users/change-password', 'POST', payload);
+                const msg = document.getElementById('msg-password');
+
+                if (resp && resp.ok) {
+                    msg.className = 'alert alert-success';
+                    msg.textContent = "Password Changed Successfully!";
+                    msg.style.display = 'block';
+                    e.target.reset();
+                } else if (resp) {
+                    const err = await resp.json();
+                    msg.className = 'alert alert-error';
+                    msg.textContent = "Error: " + (err.detail || "Failed to change password");
+                    msg.style.display = 'block';
+                }
+                setTimeout(() => msg.style.display = 'none', 4000);
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // New Distributor Handler
+        document.getElementById('create-dist-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                full_name: document.getElementById('d_full_name').value,
+                username: document.getElementById('d_username').value,
+                company_name: document.getElementById('d_company_name').value,
+                email: document.getElementById('d_email').value,
+                password: document.getElementById('d_password').value,
+                role: 'DISTRIBUTOR'
+            };
+
+            const resp = await apiCall('/super-master/distributors', 'POST', payload);
+            if (resp && resp.ok) {
+                e.target.reset();
+                loadDistributors();
+                const msg = document.getElementById('msg-dist');
+                msg.className = 'alert alert-success';
+                msg.textContent = "Distributor Created Successfully!";
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3000);
+            } else {
+                const err = await resp.json();
+                alert("Error: " + err.detail);
+            }
+        });
+
+        // Initial Load
+        loadPendingRequests(); // default view
+    </script>
+</body>
+
+</html>

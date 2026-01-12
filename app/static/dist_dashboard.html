@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Distributor Dashboard - LPG Connect</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .profile-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .profile-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .profile-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-approved {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-rejected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-aggregated {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-completed {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <div class="sidebar glass-panel">
+            <h2 class="section-title" style="font-size: 1.2rem; padding-left: 1rem;">Distributor Portal</h2>
+            <nav>
+                <a href="#" class="nav-item active" onclick="showSection('profile')">My Profile</a>
+                <a href="#" class="nav-item" onclick="showSection('orders')">Orders</a>
+                <a href="#" class="nav-item" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <!-- Profile Section -->
+            <div id="profile-section">
+                <h1 class="section-title">My Profile</h1>
+
+                <div class="glass-panel" style="padding: 2rem; max-width: 600px; margin-bottom: 2rem;">
+                    <h3>Update Profile Information</h3>
+                    <div id="msg" class="alert"></div>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="full_name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="company_name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Number</label>
+                            <input type="text" id="contact_number" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea id="address" class="form-input" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>GST Number</label>
+                            <input type="text" id="gst_number" class="form-input">
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile</button>
+                    </form>
+                </div>
+
+                <!-- Password Change Section -->
+                <div class="glass-panel" style="padding: 2rem; max-width: 600px; margin-bottom: 2rem;">
+                    <h3>Change Password</h3>
+                    <div id="msg-password" class="alert"></div>
+                    <form id="password-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="old_password" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="new_password" class="form-input" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary"
+                            style="margin-top: 1rem; background-color: #F59E0B;">Update Password</button>
+                    </form>
+                </div>
+
+                <!-- Profile Display -->
+                <div class="profile-display" id="profile-display" style="display: none; max-width: 640px;">
+                    <h3 style="margin-bottom: 1rem;">📋 Current Profile Details</h3>
+                    <div class="profile-grid">
+                        <div class="profile-item">
+                            <div class="profile-label">Full Name</div>
+                            <div class="profile-value" id="disp_full_name">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Company Name</div>
+                            <div class="profile-value" id="disp_company_name">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Contact Number</div>
+                            <div class="profile-value" id="disp_contact_number">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Email</div>
+                            <div class="profile-value" id="disp_email">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">GST Number</div>
+                            <div class="profile-value" id="disp_gst_number">-</div>
+                        </div>
+                        <div class="profile-item" style="grid-column: 1 / -1;">
+                            <div class="profile-label">Address</div>
+                            <div class="profile-value" id="disp_address">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="orders-section" style="display: none;">
+                <h1 class="section-title">New Booking Request</h1>
+                <div class="glass-panel" style="padding: 2rem;">
+                    <div id="order-msg" class="alert"></div>
+                    <form id="order-form">
+                        <div class="form-group">
+                            <label>Date of Booking</label>
+                            <input type="date" id="booking_date" class="form-input" required>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                            <!-- Filled Cylinders -->
+                            <div>
+                                <h3 style="color: #4CAF50; margin-bottom: 1rem;">Filled Cylinders Required</h3>
+                                <div class="form-group">
+                                    <input type="number" id="filled_14kg" placeholder="14kg Qty" class="form-input"
+                                        value="0">
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" id="filled_17kg" placeholder="17kg Qty" class="form-input"
+                                        value="0">
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" id="filled_19kg" placeholder="19kg Qty" class="form-input"
+                                        value="0">
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" id="filled_21kg" placeholder="21kg Qty" class="form-input"
+                                        value="0">
+                                </div>
+                            </div>
+
+                            <!-- Empty Payloads -->
+                            <div>
+                                <h3 style="color: #f44336; margin-bottom: 1rem;">Empty Cylinders Returning</h3>
+                                <div class="form-group">
+                                    <input type="number" id="empty_14kg" placeholder="Empty 14kg" class="form-input"
+                                        value="0">
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" id="empty_17kg" placeholder="Empty 17kg" class="form-input"
+                                        value="0">
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" id="empty_19kg" placeholder="Empty 19kg" class="form-input"
+                                        value="0">
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" id="empty_21kg" placeholder="Empty 21kg" class="form-input"
+                                        value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top: 2rem;">Submit Request</button>
+                    </form>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h2 class="section-title" style="font-size: 1.5rem;">Order History</h2>
+                    <div class="glass-panel" style="padding: 1rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="margin-right: 0.5rem;">Filter by Status:</label>
+                            <select id="status-filter" class="form-input" style="width: auto; display: inline-block;">
+                                <option value="ALL">All</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                                <option value="AGGREGATED">Aggregated</option>
+                                <option value="COMPLETED">Completed</option>
+                            </select>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Filled (14/17/19/21)</th>
+                                    <th>Empty (14/17/19/21)</th>
+                                    <th>Total Cylinders</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requests-table-body">
+                                <!-- Data populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/common.js"></script>
+    <script>
+        let currentProfile = null;
+
+        function showSection(sectionId) {
+            document.getElementById('profile-section').style.display = 'none';
+            document.getElementById('orders-section').style.display = 'none';
+
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+            if (sectionId === 'profile') {
+                document.getElementById('profile-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+            }
+            if (sectionId === 'orders') {
+                document.getElementById('orders-section').style.display = 'block';
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                loadRequests();
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const resp = await apiCall('/distributor/profile');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    currentProfile = data;
+
+                    // Update form
+                    document.getElementById('full_name').value = data.full_name || '';
+                    document.getElementById('company_name').value = data.company_name || '';
+                    document.getElementById('contact_number').value = data.contact_number || '';
+                    document.getElementById('address').value = data.address || '';
+                    document.getElementById('email').value = data.email || '';
+                    document.getElementById('gst_number').value = data.gst_number || '';
+
+                    // Update display section
+                    displayProfile(data);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function displayProfile(data) {
+            if (!data) return;
+
+            document.getElementById('disp_full_name').textContent = data.full_name || '-';
+            document.getElementById('disp_company_name').textContent = data.company_name || '-';
+            document.getElementById('disp_contact_number').textContent = data.contact_number || '-';
+            document.getElementById('disp_email').textContent = data.email || '-';
+            document.getElementById('disp_gst_number').textContent = data.gst_number || '-';
+            document.getElementById('disp_address').textContent = data.address || '-';
+
+            // Show the display section
+            document.getElementById('profile-display').style.display = 'block';
+        }
+
+        async function loadRequests(statusFilter = 'ALL') {
+            try {
+                const url = `/distributor/requests/history?status_filter=${statusFilter}`;
+                const resp = await apiCall(url);
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    const tbody = document.getElementById('requests-table-body');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No orders found</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(req => {
+                        const tr = document.createElement('tr');
+                        const totalFilled = (req.filled_14kg || 0) + (req.filled_17kg || 0) + (req.filled_19kg || 0) + (req.filled_21kg || 0);
+                        const totalEmpty = (req.empty_14kg || 0) + (req.empty_17kg || 0) + (req.empty_19kg || 0) + (req.empty_21kg || 0);
+                        const total = totalFilled + totalEmpty;
+
+                        tr.innerHTML = `
+                            <td>#${req.id}</td>
+                            <td>${req.booking_date}</td>
+                            <td><span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span></td>
+                            <td>${req.filled_14kg}/${req.filled_17kg}/${req.filled_19kg}/${req.filled_21kg}</td>
+                            <td>${req.empty_14kg}/${req.empty_17kg}/${req.empty_19kg}/${req.empty_21kg}</td>
+                            <td><strong>${total}</strong></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg');
+            const payload = {
+                full_name: document.getElementById('full_name').value,
+                company_name: document.getElementById('company_name').value,
+                contact_number: document.getElementById('contact_number').value,
+                address: document.getElementById('address').value,
+                email: document.getElementById('email').value,
+                gst_number: document.getElementById('gst_number').value
+            };
+
+            try {
+                const resp = await apiCall('/distributor/profile', 'PUT', payload);
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    msg.className = 'alert alert-success';
+                    msg.textContent = '✅ Profile updated successfully!';
+                    msg.style.display = 'block';
+                    displayProfile(data);
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    msg.className = 'alert alert-error';
+                    msg.textContent = '❌ Failed to update profile';
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // Password Change Handler
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPassword = document.getElementById('old_password').value;
+            const newPassword = document.getElementById('new_password').value;
+
+            const payload = {
+                old_password: oldPassword,
+                new_password: newPassword
+            };
+
+            try {
+                const resp = await apiCall('/users/change-password', 'POST', payload);
+                const msg = document.getElementById('msg-password');
+
+                if (resp && resp.ok) {
+                    msg.className = 'alert alert-success';
+                    msg.textContent = "Password Changed Successfully!";
+                    msg.style.display = 'block';
+                    e.target.reset();
+                } else if (resp) {
+                    const err = await resp.json();
+                    msg.className = 'alert alert-error';
+                    msg.textContent = "Error: " + (err.detail || "Failed to change password");
+                    msg.style.display = 'block';
+                }
+                setTimeout(() => msg.style.display = 'none', 4000);
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        document.getElementById('order-form').addEventListener('submit', async (e) => {
+            try {
+                e.preventDefault();
+                const msg = document.getElementById('order-msg');
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+
+                const payload = {
+                    booking_date: document.getElementById('booking_date').value,
+                    filled_14kg: parseInt(document.getElementById('filled_14kg').value) || 0,
+                    filled_17kg: parseInt(document.getElementById('filled_17kg').value) || 0,
+                    filled_19kg: parseInt(document.getElementById('filled_19kg').value) || 0,
+                    filled_21kg: parseInt(document.getElementById('filled_21kg').value) || 0,
+                    empty_14kg: parseInt(document.getElementById('empty_14kg').value) || 0,
+                    empty_17kg: parseInt(document.getElementById('empty_17kg').value) || 0,
+                    empty_19kg: parseInt(document.getElementById('empty_19kg').value) || 0,
+                    empty_21kg: parseInt(document.getElementById('empty_21kg').value) || 0
+                };
+
+                console.log("Submitting order request...", payload);
+                if (submitBtn) submitBtn.disabled = true;
+
+                const resp = await apiCall('/distributor/requests', 'POST', payload);
+                if (resp && resp.ok) {
+                    console.log("Order submitted successfully");
+                    msg.className = 'alert alert-success';
+                    msg.textContent = '✅ Request submitted successfully!';
+                    msg.style.display = 'block';
+                    e.target.reset();
+                    loadRequests(); // Refresh table
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    const status = resp ? resp.status : 'Network Error';
+                    let detail = '';
+                    try {
+                        const err = await resp.json();
+                        detail = err.detail || '';
+                    } catch (e) { }
+
+                    const errorMsg = `❌ Failed to submit request: ${status} ${detail}`;
+                    console.error(errorMsg);
+                    msg.className = 'alert alert-error';
+                    msg.textContent = errorMsg;
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Critical error in order submission:", err);
+                alert("An unexpected error occurred. Please check the console.");
+            } finally {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+
+        // Status filter change
+        document.getElementById('status-filter').addEventListener('change', (e) => {
+            loadRequests(e.target.value);
+        });
+
+        loadProfile();
+        loadRequests();
+    </script>
+</body>
+
+</html>

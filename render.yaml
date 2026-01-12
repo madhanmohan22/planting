@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: planting-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python init_db.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false # User will provide the CockroachDB URL in Render Dashboard
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 1440

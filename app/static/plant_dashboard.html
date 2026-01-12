@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Plant Dashboard - LPG Connect</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .profile-display {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .profile-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .profile-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-dispatched {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-received {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .sub-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        .sub-nav-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .sub-nav-item.active {
+            background: #ecfdf5;
+            color: #059669;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <div class="sidebar glass-panel">
+            <h2 class="section-title" style="font-size: 1.2rem; padding-left: 1rem;">Plant Portal</h2>
+            <nav>
+                <a href="#" class="nav-item active" onclick="showSection('orders')">Stock & Orders</a>
+                <a href="#" class="nav-item" onclick="showSection('sm')">Super Masters</a>
+                <a href="#" class="nav-item" onclick="showSection('profile')">My Profile</a>
+                <a href="#" class="nav-item" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <!-- Orders Section -->
+            <div id="orders-section">
+                <h1 class="section-title">Order Management</h1>
+
+                <div class="sub-nav">
+                    <div class="sub-nav-item active" onclick="showOrderTab('pending')">Pending Requests</div>
+                    <div class="sub-nav-item" onclick="showOrderTab('history')">Dispatch History</div>
+                </div>
+
+                <div class="glass-panel" style="padding: 1.5rem;">
+
+                    <!-- Pending Tab -->
+                    <div id="tab-pending">
+                        <h3 style="margin-bottom: 1rem;">Consolidated Orders from Super Masters</h3>
+                        <div id="order-msg" class="alert"></div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ref ID</th>
+                                    <th>Super Master</th>
+                                    <th>Date</th>
+                                    <th>Filled (14/17/19/21)</th>
+                                    <th>Empty (14/17/19/21)</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pending-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div id="tab-history" style="display: none;">
+                        <h3 style="margin-bottom: 1rem;">Past Dispatches</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ref ID</th>
+                                    <th>Super Master</th>
+                                    <th>Date</th>
+                                    <th>Filled (14/17/19/21)</th>
+                                    <th>Empty (14/17/19/21)</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Super Masters Section -->
+            <div id="sm-section" style="display: none;">
+                <h1 class="section-title">Associated Super Masters</h1>
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <p style="margin-bottom: 1rem; color: #4b5563;">Super Masters who are assigned to this plant
+                        location and send consolidated orders.</p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Contact</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sm-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profile-section" style="display: none;">
+                <h1 class="section-title">Plant Coordinator Profile</h1>
+
+                <div class="glass-panel" style="padding: 2rem; max-width: 600px; margin-bottom: 2rem;">
+                    <h3>Update Profile</h3>
+                    <div id="msg" class="alert"></div>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label>Coordinator Name</label>
+                            <input type="text" id="full_name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Plant Name / Company</label>
+                            <input type="text" id="company_name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Number</label>
+                            <input type="text" id="contact_number" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Plant Address</label>
+                            <textarea id="address" class="form-input" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" class="form-input">
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile</button>
+                    </form>
+                </div>
+
+                <!-- Password Change Section -->
+                <div class="glass-panel" style="padding: 2rem; max-width: 600px; margin-bottom: 2rem;">
+                    <h3>Change Password</h3>
+                    <div id="msg-password" class="alert"></div>
+                    <form id="password-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="old_password" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="new_password" class="form-input" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary"
+                            style="margin-top: 1rem; background-color: #F59E0B;">Update Password</button>
+                    </form>
+                </div>
+
+                <!-- Profile Display -->
+                <div class="profile-display" id="profile-display" style="display: none; max-width: 640px;">
+                    <h3 style="margin-bottom: 1rem;">📋 Current Profile Details</h3>
+                    <div class="profile-grid">
+                        <div class="profile-item">
+                            <div class="profile-label">Name</div>
+                            <div class="profile-value" id="disp_full_name">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Company</div>
+                            <div class="profile-value" id="disp_company_name">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Contact</div>
+                            <div class="profile-value" id="disp_contact_number">-</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-label">Email</div>
+                            <div class="profile-value" id="disp_email">-</div>
+                        </div>
+                        <div class="profile-item" style="grid-column: 1 / -1;">
+                            <div class="profile-label">Address</div>
+                            <div class="profile-value" id="disp_address">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/common.js"></script>
+    <script>
+        function showSection(sectionId) {
+            document.getElementById('profile-section').style.display = 'none';
+            document.getElementById('orders-section').style.display = 'none';
+            document.getElementById('sm-section').style.display = 'none';
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            if (sectionId === 'orders') {
+                document.getElementById('orders-section').style.display = 'block';
+                navItems[0].classList.add('active');
+                loadPendingOrders();
+            } else if (sectionId === 'sm') {
+                document.getElementById('sm-section').style.display = 'block';
+                navItems[1].classList.add('active');
+                loadSuperMasters();
+            } else if (sectionId === 'profile') {
+                document.getElementById('profile-section').style.display = 'block';
+                navItems[2].classList.add('active');
+                loadProfile();
+            }
+        }
+
+        function showOrderTab(tabName) {
+            document.getElementById('tab-pending').style.display = 'none';
+            document.getElementById('tab-history').style.display = 'none';
+
+            document.querySelectorAll('.sub-nav-item').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'pending') {
+                document.getElementById('tab-pending').style.display = 'block';
+                document.querySelectorAll('.sub-nav-item')[0].classList.add('active');
+                loadPendingOrders();
+            } else if (tabName === 'history') {
+                document.getElementById('tab-history').style.display = 'block';
+                document.querySelectorAll('.sub-nav-item')[1].classList.add('active');
+                loadOrderHistory();
+            }
+        }
+
+        async function loadPendingOrders() {
+            try {
+                const resp = await apiCall('/plant/requests/pending');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    const tbody = document.getElementById('pending-body');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No pending consolidated orders</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(req => {
+                        const tr = document.createElement('tr');
+                        const filledBreakdown = `${req.sum_filled_14kg}/${req.sum_filled_17kg}/${req.sum_filled_19kg}/${req.sum_filled_21kg}`;
+                        const emptyBreakdown = `${req.sum_empty_14kg}/${req.sum_empty_17kg}/${req.sum_empty_19kg}/${req.sum_empty_21kg}`;
+                        const totalCyl = (req.total_filled_cylinders || 0) + (req.total_empty_cylinders || 0);
+
+                        tr.innerHTML = `
+                            <td>#${req.id}</td>
+                            <td>SM #${req.super_master_id}</td>
+                            <td>${new Date(req.created_at).toLocaleDateString()}</td>
+                            <td>${filledBreakdown}</td>
+                            <td>${emptyBreakdown}</td>
+                            <td><strong>${totalCyl}</strong></td>
+                            <td><span class="status-badge status-pending">${req.status}</span></td>
+                            <td>
+                                <button onclick="dispatchOrder('${req.id}')" class="btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">Dispatch Stock</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadOrderHistory() {
+            try {
+                const resp = await apiCall('/plant/requests/history');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    const tbody = document.getElementById('history-body');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No history found</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(req => {
+                        const tr = document.createElement('tr');
+                        const filledBreakdown = `${req.sum_filled_14kg}/${req.sum_filled_17kg}/${req.sum_filled_19kg}/${req.sum_filled_21kg}`;
+                        const emptyBreakdown = `${req.sum_empty_14kg}/${req.sum_empty_17kg}/${req.sum_empty_19kg}/${req.sum_empty_21kg}`;
+                        const totalCyl = (req.total_filled_cylinders || 0) + (req.total_empty_cylinders || 0);
+
+                        tr.innerHTML = `
+                             <td>#${req.id}</td>
+                             <td>SM #${req.super_master_id}</td>
+                             <td>${new Date(req.created_at).toLocaleDateString()}</td>
+                             <td>${filledBreakdown}</td>
+                             <td>${emptyBreakdown}</td>
+                             <td><strong>${totalCyl}</strong></td>
+                             <td><span class="status-badge status-dispatched">${req.status}</span></td>
+                         `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadSuperMasters() {
+            try {
+                const resp = await apiCall('/plant/super-masters');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    const tbody = document.getElementById('sm-body');
+                    tbody.innerHTML = '';
+
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No linked Super Masters found.</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(sm => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>
+                                <div style="font-weight:600;">${sm.full_name || sm.username}</div>
+                                <div style="font-size:0.8rem; color:#6b7280;">ID: #${sm.id}</div>
+                            </td>
+                            <td>${sm.company_name || '-'}</td>
+                            <td>${sm.contact_number || '-'}</td>
+                            <td>${sm.email}</td>
+                            <td>${sm.address || '-'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function dispatchOrder(id) {
+            try {
+                if (!confirm("Confirm dispatch of stock for this consolidated order?")) return;
+
+                console.log(`Attempting to dispatch order #${id}...`);
+                const msg = document.getElementById('order-msg');
+                const resp = await apiCall(`/plant/dispatch/${id}`, 'POST');
+
+                if (resp && resp.ok) {
+                    console.log("Order dispatched successfully");
+                    msg.className = 'alert alert-success';
+                    msg.textContent = '✅ Order dispatched successfully!';
+                    msg.style.display = 'block';
+                    loadPendingOrders();
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    const status = resp ? resp.status : 'Network Error';
+                    let detail = '';
+                    try {
+                        const err = await resp.json();
+                        detail = err.detail || '';
+                    } catch (e) { }
+
+                    const errorMsg = `❌ Failed to dispatch: ${status} ${detail}`;
+                    console.error(errorMsg);
+                    msg.className = 'alert alert-error';
+                    msg.textContent = errorMsg;
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Critical error in dispatchOrder:", err);
+                alert("An unexpected error occurred during dispatch. Please check the console.");
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const resp = await apiCall('/users/me');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    // Form
+                    document.getElementById('full_name').value = data.full_name || '';
+                    document.getElementById('company_name').value = data.company_name || '';
+                    document.getElementById('contact_number').value = data.contact_number || '';
+                    document.getElementById('address').value = data.address || '';
+                    document.getElementById('email').value = data.email || '';
+
+                    // Display
+                    document.getElementById('disp_full_name').textContent = data.full_name || '-';
+                    document.getElementById('disp_company_name').textContent = data.company_name || '-';
+                    document.getElementById('disp_contact_number').textContent = data.contact_number || '-';
+                    document.getElementById('disp_email').textContent = data.email || '-';
+                    document.getElementById('disp_address').textContent = data.address || '-';
+
+                    document.getElementById('profile-display').style.display = 'block';
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg');
+            const payload = {
+                full_name: document.getElementById('full_name').value,
+                company_name: document.getElementById('company_name').value,
+                contact_number: document.getElementById('contact_number').value,
+                address: document.getElementById('address').value,
+                email: document.getElementById('email').value
+            };
+
+            try {
+                const resp = await apiCall('/users/me', 'PUT', payload);
+                if (resp && resp.ok) {
+                    msg.className = 'alert alert-success';
+                    msg.textContent = '✅ Profile updated successfully!';
+                    msg.style.display = 'block';
+                    loadProfile();
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    msg.className = 'alert alert-error';
+                    msg.textContent = '❌ Failed to update profile';
+                    msg.style.display = 'block';
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        // Password Change Handler
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPassword = document.getElementById('old_password').value;
+            const newPassword = document.getElementById('new_password').value;
+
+            const payload = {
+                old_password: oldPassword,
+                new_password: newPassword
+            };
+
+            try {
+                const resp = await apiCall('/users/change-password', 'POST', payload);
+                const msg = document.getElementById('msg-password');
+
+                if (resp && resp.ok) {
+                    msg.className = 'alert alert-success';
+                    msg.textContent = "Password Changed Successfully!";
+                    msg.style.display = 'block';
+                    e.target.reset();
+                } else if (resp) {
+                    const err = await resp.json();
+                    msg.className = 'alert alert-error';
+                    msg.textContent = "Error: " + (err.detail || "Failed to change password");
+                    msg.style.display = 'block';
+                }
+                setTimeout(() => msg.style.display = 'none', 4000);
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        loadPendingOrders(); // default view
+    </script>
+</body>
+
+</html>
