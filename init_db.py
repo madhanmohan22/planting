@@ -22,6 +22,7 @@ async def init_models():
     print("Tables created successfully.")
 
 if __name__ == "__main__":
-    if asyncio.get_event_loop_policy().__class__.__name__ != 'WindowsSelectorEventLoopPolicy':
+    import sys
+    if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(init_models())
